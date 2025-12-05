@@ -1,6 +1,6 @@
 # Blueprint Deployment Module
 
-This module deploys **any Aria Automation or VCF Automation blueprint** using dynamic inputs passed from the parent Terraform configuration.
+This module deploys **any Aria Automation or VCF Automation blueprint** using dynamic inputs passed from the parent Terraform configuration.  This module currently supports deploy the latest draft of an Assembler Blueprint.
 
 It abstracts away the boilerplate of:
 - Selecting a project  
@@ -14,25 +14,26 @@ It abstracts away the boilerplate of:
 
 | Variable | Type | Description | Required |
 |---------|------|-------------|----------|
-| `project_id` | string | Aria/VCF project to deploy into | Yes |
-| `blueprint_id` | string | The blueprint ID or name | Yes |
+| `project_name` | string | Aria/VCF project to deploy into | Yes |
+| `blueprint_name` | string | The blueprint ID or name | Yes |
 | `deployment_name` | string | Name of the deployment | Yes |
 | `inputs` | map(any) | Key/value inputs for the blueprint | Yes |
 | `description` | string | Optional description | No |
-| `tags` | list(object) | Optional blueprint deployment tags | No |
 
 ### Example Usage
 
 ```hcl
 module "deployments" {
-  source   = "./virtualmachine"
+  source  = "sentania-labs/vmapps-blueprint/vra"
+  version = "0.8.0"
+
   for_each = var.deployments
 
-  project_name         = var.vcfa_project
-  deployment_name      = each.value.deployment_name
-  description          = each.value.description
-  catalog_item_name    = each.value.catalog_item_name
-  inputs               = each.value.inputs
+  project_name    = var.vcfa_project
+  deployment_name = each.value.deployment_name
+  description     = each.value.description
+  blueprint_name  = each.value.blueprint_name
+  inputs          = each.value.inputs
 }
 ```
 
@@ -44,11 +45,8 @@ module "deployments" {
 |--------|------------|
 | `id` | Deployment ID |
 | `name` | Deployment name |
-| `resources` | Full map of deployment resources |
-| `primary_ips` | List of discovered primary IP addresses |
-| `resource_properties` | Flattened key/value map of resource properties |
 
-These can be consumed by:
+These can be consumed by further modules by utilizing the vra_machine data source.
 - DNS automation
 - CMDB inserts
 - NSX policy modules
@@ -71,21 +69,6 @@ This module makes it trivial to build:
 - Repo B → configure DNS / CMDB / Monitoring  
 - Repo C → attach network policies  
 …all consuming the outputs from this module.
-
----
-
-## 🧪 Testing  
-You can validate the module by running:
-
-```bash
-terraform plan -var-file="envs/example.tfvars"
-```
-
-Then deploy:
-
-```bash
-terraform apply -var-file="envs/example.tfvars"
-```
 
 ---
 
